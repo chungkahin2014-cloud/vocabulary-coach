@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vocabulary Coach & Memory Architect</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Newsreader (Editorial Serif) & Inter (Clean Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#FAF9F6',
+            card: '#FFFFFF',
+            ink: '#1E293B',
+            muted: '#64748B',
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              600: '#4F46E5',
+              700: '#4338CA',
+            },
+            amberHook: {
+              50: '#FFFBEB',
+              100: '#FEF3C7',
+              700: '#B45309',
+              800: '#92400E',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 20px -2px rgba(30, 41, 59, 0.06), 0 1px 3px -1px rgba(30, 41, 59, 0.04)',
+            'card-hover': '0 10px 28px -4px rgba(30, 41, 59, 0.1), 0 4px 8px -2px rgba(30, 41, 59, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FAF9F6;
+      color: #1E293B;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 3D Flip Card Mechanics */
+    .perspective-1000 {
+      perspective: 1200px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Subtle fade-in animation */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-up {
+      animation: fadeSlideUp 0.35s ease-out forwards;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAF9F6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Toast Notification Banner (No alert() or confirm()) -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Confirmation Modal (Replaces window.confirm) -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-fade-up">
+      <div class="flex items-center gap-3 text-amber-600 mb-3">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        <h3 id="confirm-title" class="font-bold text-lg text-slate-900">Confirm Action</h3>
+      </div>
+      <p id="confirm-message" class="text-slate-600 text-sm leading-relaxed mb-6">Are you sure you want to proceed?</p>
+      <div class="flex justify-end gap-3">
+        <button id="confirm-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+        <button id="confirm-ok-btn" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="sticky top-0 z-30 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <!-- Brand Identity -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+            <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-serif font-bold text-xl sm:text-2xl tracking-tight text-slate-900 leading-none">
+              Vocabulary Coach
+            </h1>
+            <p class="text-xs font-medium text-slate-500 tracking-wide mt-0.5">
+              &amp; Memory Architect
+            </p>
+          </div>
+        </div>
+        <!-- Mobile Quick Deck Counter -->
+        <span id="mobile-deck-count" class="md:hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+          3 Words
+        </span>
+      </div>
+
+      <!-- Subtle Header Mastery Progress Indicator -->
+      <div class="hidden lg:flex flex-col gap-1 min-w-[170px] px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/70">
+        <div class="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+          <span>Mastery</span>
+          <span id="header-mastery-text" class="text-indigo-600">0 / 3 Mastered</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div id="header-mastery-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Segmented Mode Navigation -->
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <nav aria-label="Learning Modes" class="flex bg-slate-200/70 p-1 rounded-xl flex-1 md:w-auto overflow-x-auto">
+          <button onclick="switchMode('flashcards')" id="tab-flashcards"
+            class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap bg-white text-indigo-700 shadow-xs">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            <span>Create &amp; Study</span>
+          </button>
+          <button onclick="switchMode('quiz')" id="tab-quiz"
+            class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>Active Recall Quiz</span>
+          </button>
+          <button onclick="switchMode('vault')" id="tab-vault"
+            class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap">
+            <i data-lucide="book-open-check" class="w-4 h-4"></i>
+            <span>My Vault</span>
+            <span id="nav-badge-count" class="ml-0.5 px-1.5 py-0.2 text-[11px] rounded-full bg-indigo-100 text-indigo-700 font-bold">3</span>
+          </button>
+        </nav>
+
+        <!-- Optional API Key Settings Trigger -->
+        <button type="button" onclick="openApiKeyModal()" title="Configure Gemini API Key (Optional)"
+          class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:text-indigo-700 hover:border-indigo-200 transition shadow-2xs shrink-0">
+          <i data-lucide="key-round" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Optional API Key Modal -->
+  <div id="apikey-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-fade-up">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5 text-indigo-600">
+          <i data-lucide="key-round" class="w-5 h-5"></i>
+          <h3 class="font-bold text-lg text-slate-900">Gemini API Key (Optional)</h3>
+        </div>
+        <button type="button" onclick="closeApiKeyModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <p class="text-slate-600 text-xs leading-relaxed mb-4">
+        In Canvas preview, AI works automatically. If you host or open this file standalone, paste a Gemini API key below (stored only in your browser) or leave blank to use the built-in smart fallback architect.
+      </p>
+      <input
+        type="password"
+        id="custom-api-key-input"
+        placeholder="AIzaSy..."
+        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 mb-4"
+      />
+      <div class="flex justify-end gap-2.5">
+        <button type="button" onclick="clearCustomApiKey()" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">Clear Key</button>
+        <button type="button" onclick="saveCustomApiKey()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- ========================================================= -->
+    <!-- MODE 1: CREATE & STUDY FLASHCARDS                         -->
+    <!-- ========================================================= -->
+    <section id="view-flashcards" class="space-y-6 animate-fade-up">
+
+      <!-- Search / New Word Input Card -->
+      <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-card border border-slate-200/80">
+        <form id="new-word-form" onsubmit="handleGenerateWord(event)" class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-slate-400">
+              <i data-lucide="search" class="w-5 h-5"></i>
+            </div>
+            <input
+              type="text"
+              id="word-input"
+              placeholder="Enter any word, idiom, or phrase (e.g., 'ubiquitous', 'cut corners')..."
+              class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:bg-white transition text-base"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            id="generate-btn"
+            class="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-sm transition flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+            <i data-lucide="wand-2" class="w-4 h-4"></i>
+            <span>Architect Flashcard</span>
+          </button>
+        </form>
+
+        <!-- Sample Quick-Fill Pills & Deck Selector -->
+        <div class="mt-4 pt-3.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Quick-Try:</span>
+            <button type="button" onclick="quickFillSample('ephemeral')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium transition">ephemeral</button>
+            <button type="button" onclick="quickFillSample('serendipity')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium transition">serendipity</button>
+            <button type="button" onclick="quickFillSample('bite the bullet')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium transition">bite the bullet</button>
+            <button type="button" onclick="quickFillSample('ubiquitous')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium transition">ubiquitous</button>
+            <button type="button" onclick="quickFillSample('pragmatic')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium transition">pragmatic</button>
+          </div>
+
+          <!-- View Toggle: Detailed Study Sheet vs 3D Flip Mode -->
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <span class="text-xs text-slate-500 font-medium">Card View:</span>
+            <div class="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/60">
+              <button type="button" id="btn-view-sheet" onclick="setCardPresentation('sheet')" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-800 shadow-2xs transition">Full Memory Sheet</button>
+              <button type="button" id="btn-view-flip" onclick="setCardPresentation('flip')" class="px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition">3D Flip Card</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deck Navigation Strip -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1" id="deck-pills-container">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="navigateCard(-1)" title="Previous Card" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-2xs">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <span id="card-position-indicator" class="text-xs font-semibold text-slate-500 px-2">1 / 3</span>
+          <button onclick="navigateCard(1)" title="Next Card" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-2xs">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton for Flashcard Generation -->
+      <div id="flashcard-loading" class="hidden bg-white rounded-2xl p-8 shadow-card border border-slate-200/80 text-center space-y-4">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto animate-pulse">
+          <i data-lucide="brain" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-bold text-slate-900">Architecting Memory Hooks...</h3>
+          <p class="text-sm text-slate-500 mt-1">Crafting vivid visual mnemonics, etymology, and contextual collocations.</p>
+        </div>
+        <div class="max-w-md mx-auto space-y-2.5 pt-2">
+          <div class="h-3 bg-slate-100 rounded-full w-3/4 mx-auto animate-pulse"></div>
+          <div class="h-3 bg-slate-100 rounded-full w-full animate-pulse"></div>
+          <div class="h-3 bg-slate-100 rounded-full w-5/6 mx-auto animate-pulse"></div>
+        </div>
+      </div>
+
+      <!-- Active Flashcard Display Container -->
+      <div id="flashcard-display-area">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MODE 2: ACTIVE RECALL QUIZ MODE                           -->
+    <!-- ========================================================= -->
+    <section id="view-quiz" class="hidden space-y-6 animate-fade-up">
+
+      <!-- Quiz Header Banner -->
+      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-card border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 mb-1.5">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span>Spaced Repetition &amp; Active Recall</span>
+          </div>
+          <h2 class="font-serif text-2xl font-bold text-slate-900">Active Recall Training</h2>
+          <p class="text-sm text-slate-500 mt-0.5">Prioritizing new and weak words. One high-effort challenge at a time.</p>
+        </div>
+        <div class="flex items-center gap-3 self-start sm:self-center">
+          <div class="text-right">
+            <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Session Streak</div>
+            <div id="quiz-streak-display" class="text-xl font-bold text-indigo-600">0 🔥</div>
+          </div>
+          <button onclick="startNewQuizQuestion()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Skip / New</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Stage Container -->
+      <div id="quiz-stage" class="bg-white rounded-2xl p-6 sm:p-8 shadow-card border border-slate-200/80">
+        <!-- Dynamically populated -->
+      </div>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MODE 3: VOCABULARY LIST & PROGRESS DASHBOARD              -->
+    <!-- ========================================================= -->
+    <section id="view-vault" class="hidden space-y-6 animate-fade-up">
+
+      <!-- Mastery Stats Dashboard -->
+      <div class="bg-white rounded-2xl p-6 shadow-card border border-slate-200/80 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="font-serif text-2xl font-bold text-slate-900">Your Memory Vault</h2>
+            <p class="text-sm text-slate-500">Track retention across mastery stages and export your personal lexicon.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="copyShareableLink()" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="link" class="w-3.5 h-3.5"></i>
+              <span>Share Deck Link</span>
+            </button>
+            <button onclick="exportMarkdown()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>Copy as Markdown Table</span>
+            </button>
+            <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Download CSV</span>
+            </button>
+            <button onclick="confirmClearStarterWords()" class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="eraser" class="w-3.5 h-3.5"></i>
+              <span>Clear Starter Words</span>
+            </button>
+            <button onclick="confirmResetDeck()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Demo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Stat Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Saved</div>
+            <div id="stat-total" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">3</div>
+          </div>
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200/70">
+            <div class="text-xs font-semibold text-amber-800 uppercase tracking-wider">Level 1 · New</div>
+            <div id="stat-new" class="text-2xl sm:text-3xl font-bold text-amber-700 mt-1">3</div>
+          </div>
+          <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200/70">
+            <div class="text-xs font-semibold text-indigo-800 uppercase tracking-wider">Level 2 · Reviewing</div>
+            <div id="stat-reviewing" class="text-2xl sm:text-3xl font-bold text-indigo-700 mt-1">0</div>
+          </div>
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/70">
+            <div class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Level 3 · Mastered</div>
+            <div id="stat-mastered" class="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- Overall Mastery Progress Bar -->
+        <div>
+          <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1.5">
+            <span>Overall Retention Progress</span>
+            <span id="mastery-percentage-label">0% Mastered</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
+            <div id="bar-mastered" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+            <div id="bar-reviewing" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
+            <div id="bar-new" class="bg-amber-400 h-full transition-all duration-500" style="width: 100%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="flex flex-col sm:flex-row gap-3 justify-between">
+        <div class="relative flex-1 max-w-md">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input
+            type="text"
+            id="vault-search"
+            oninput="renderVaultList()"
+            placeholder="Filter saved words or meanings..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+          />
+        </div>
+        <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 self-start">
+          <button onclick="setVaultFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">All</button>
+          <button onclick="setVaultFilter(1)" id="filter-1" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">New</button>
+          <button onclick="setVaultFilter(2)" id="filter-2" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Reviewing</button>
+          <button onclick="setVaultFilter(3)" id="filter-3" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Mastered</button>
+        </div>
+      </div>
+
+      <!-- Vault Table / Cards Container -->
+      <div id="vault-list-container" class="bg-white rounded-2xl shadow-card border border-slate-200/80 overflow-hidden">
+        <!-- Populated dynamically -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Subtle Footer -->
+  <footer class="max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 text-center text-xs text-slate-400 border-t border-slate-200/60 mt-8">
+    Built with Cognitive Memory Science · Dual Coding · Elaborative Encoding · Spaced Repetition
+  </footer>
+
+  <!-- ========================================================= -->
+  <!-- APPLICATION LOGIC (GEMINI API + STATE + QUIZ ENGINE)      -->
+  <!-- ========================================================= -->
+  <script>
+    // ---------------------------------------------------------
+    // 1. Starter Deck & Application State
+    // ---------------------------------------------------------
+    const STORAGE_KEY = 'vocab_architect_deck_v1';
+
+    const STARTER_DECK = [
+      {
+        id: 'starter-1',
+        word: 'ephemeral',
+        partOfSpeech: 'adjective',
+        ipa: '/ɪˈfɛm.ər.əl/',
+        meaning: 'Lasting for a very short time; fleeting or transitory.',
+        memoryHook: 'Picture a fragile "e-funeral" for a Mayfly insect that lives for just one single afternoon—gone before sunset.',
+        rootsNuance: 'From Greek ephēmeros ("lasting only a day": epi- "on" + hēmera "day"). Literary or poetic register; used for beauty, trends, or moments.',
+        contextSentences: [
+          'Cherry blossoms are famously ephemeral, blooming for barely a week each spring.',
+          'Viral internet fame tends to be ephemeral unless backed by real substance.'
+        ],
+        collocations: ['ephemeral beauty', 'ephemeral nature', 'ephemeral fame'],
+        similar: 'fleeting (emphasizes speed of passing; ephemeral emphasizes short lifespan)',
+        opposite: 'perpetual / enduring',
+        masteryLevel: 1,
+        missedCount: 0,
+        isStarter: true,
+        userSentence: '',
+        userSentenceFeedback: ''
+      },
+      {
+        id: 'starter-2',
+        word: 'mitigate',
+        partOfSpeech: 'verb',
+        ipa: '/ˈmɪt.ɪ.ɡeɪt/',
+        meaning: 'To make something bad, severe, or painful less harmful or intense.',
+        memoryHook: 'Imagine wearing thick oven "mitts at the gate" of a blazing furnace—they do not stop the fire, but they soften the burn.',
+        rootsNuance: 'From Latin mitigare ("to soften": mitis "mild, gentle"). Professional, analytical register common in risk, policy, and engineering.',
+        contextSentences: [
+          'Planting coastal mangroves helps mitigate the impact of severe storm surges.',
+          'We added automated backups to mitigate the risk of accidental data loss.'
+        ],
+        collocations: ['mitigate risks', 'mitigate the impact', 'mitigate damage'],
+        similar: 'alleviate (often used for physical pain or distress; mitigate suits risks/consequences)',
+        opposite: 'aggravate / exacerbate',
+        masteryLevel: 1,
+        missedCount: 0,
+        isStarter: true,
+        userSentence: '',
+        userSentenceFeedback: ''
+      },
+      {
+        id: 'starter-3',
+        word: 'bite the bullet',
+        partOfSpeech: 'idiom',
+        ipa: '/baɪt ðə ˈbʊl.ɪt/',
+        meaning: 'To force yourself to do something difficult, unpleasant, or painful that you have been putting off.',
+        memoryHook: 'Picture a 19th-century battlefield patient literally clamping down on a lead bullet to endure surgery without anesthesia.',
+        rootsNuance: 'Historical military origin before modern painkillers. Conversational yet punchy; used when courageously facing an unavoidable chore or tough decision.',
+        contextSentences: [
+          'I hate public speaking, but I finally bit the bullet and volunteered to present our quarterly roadmap.',
+          'After months of patching our old server, we decided to bite the bullet and migrate to a new system.'
+        ],
+        collocations: ['finally bite the bullet', 'have to bite the bullet'],
+        similar: 'take the plunge (emphasizes committing to an exciting/risky leap rather than enduring hardship)',
+        opposite: 'procrastinate / shy away',
+        masteryLevel: 1,
+        missedCount: 0,
+        isStarter: true,
+        userSentence: '',
+        userSentenceFeedback: ''
+      }
+    ];
+
+    const state = {
+      deck: [],
+      currentCardIndex: 0,
+      activeMode: 'flashcards',
+      cardPresentation: 'sheet', // 'sheet' | 'flip'
+      isFlipped: false,
+      vaultFilter: 'all',
+      quiz: {
+        currentWordId: null,
+        lastWordId: null,
+        questionType: null,
+        attempt: 1,
+        completed: false,
+        hintShown: false,
+        streak: 0,
+        questionData: null
+      }
+    };
+
+    // ---------------------------------------------------------
+    // 2. Persistence & Global Progress Counters
+    // ---------------------------------------------------------
+    function loadDeck() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.deck = parsed;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read from localStorage:', e);
+      }
+      state.deck = JSON.parse(JSON.stringify(STARTER_DECK));
+    }
+
+    function saveDeck() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.deck));
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+      updateGlobalCounters();
+    }
+
+    function updateGlobalCounters() {
+      const total = state.deck.length;
+      const mastered = state.deck.filter(w => w.masteryLevel === 3).length;
+      const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+
+      const navBadge = document.getElementById('nav-badge-count');
+      if (navBadge) navBadge.textContent = total;
+
+      const mobileBadge = document.getElementById('mobile-deck-count');
+      if (mobileBadge) mobileBadge.textContent = `${total} ${total === 1 ? 'Word' : 'Words'}`;
+
+      const headerText = document.getElementById('header-mastery-text');
+      if (headerText) headerText.textContent = `${mastered} / ${total} Mastered`;
+
+      const headerBar = document.getElementById('header-mastery-bar');
+      if (headerBar) headerBar.style.width = `${pct}%`;
+    }
+
+    // ---------------------------------------------------------
+    // 3. Gemini API Helper with Exponential Backoff & Offline Fallback
+    // ---------------------------------------------------------
+    const apiKey = ""; // Runtime-provided environment key
+    const CUSTOM_KEY_STORAGE = 'vocab_architect_custom_api_key';
+
+    function getEffectiveApiKey() {
+      try {
+        const custom = localStorage.getItem(CUSTOM_KEY_STORAGE);
+        if (custom && custom.trim()) return custom.trim();
+      } catch (e) {}
+      return apiKey;
+    }
+
+    function openApiKeyModal() {
+      const modal = document.getElementById('apikey-modal');
+      const input = document.getElementById('custom-api-key-input');
+      try {
+        input.value = localStorage.getItem(CUSTOM_KEY_STORAGE) || '';
+      } catch (e) {}
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeApiKeyModal() {
+      const modal = document.getElementById('apikey-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveCustomApiKey() {
+      const val = document.getElementById('custom-api-key-input').value.trim();
+      try {
+        if (val) {
+          localStorage.setItem(CUSTOM_KEY_STORAGE, val);
+          showToast('Gemini API key saved locally!', 'success');
+        } else {
+          localStorage.removeItem(CUSTOM_KEY_STORAGE);
+          showToast('Using default environment API settings.', 'info');
+        }
+      } catch (e) {}
+      closeApiKeyModal();
+    }
+
+    function clearCustomApiKey() {
+      try {
+        localStorage.removeItem(CUSTOM_KEY_STORAGE);
+      } catch (e) {}
+      document.getElementById('custom-api-key-input').value = '';
+      showToast('Custom API key cleared.', 'info');
+      closeApiKeyModal();
+    }
+
+    // Built-in rich dictionary & fallback architect for instant offline/standalone reliability
+    const BUILTIN_LEXICON = {
+      serendipity: {
+        word: 'serendipity',
+        partOfSpeech: 'noun',
+        ipa: '/ˌsɛr.ənˈdɪp.ɪ.ti/',
+        meaning: 'The occurrence of finding valuable, pleasant, or agreeable things purely by chance when not looking for them.',
+        memoryHook: 'Picture Sarah dipping into an old thrift-store bin for a cheap mug and accidentally pulling out a priceless golden teapot.',
+        rootsNuance: 'Coined by Horace Walpole in 1754 from the Persian fairy tale "The Three Princes of Serendip," whose heroes were always making lucky discoveries by accident.',
+        contextSentences: [
+          'Meeting my future co-founder in a delayed airport lounge was pure serendipity.',
+          'Great scientific breakthroughs often combine rigorous research with a stroke of serendipity.'
+        ],
+        collocations: ['pure serendipity', 'a stroke of serendipity', 'happy serendipity'],
+        similar: 'fortuity (emphasizes luck rather than joyful discovery)',
+        opposite: 'misfortune / design'
+      },
+      ubiquitous: {
+        word: 'ubiquitous',
+        partOfSpeech: 'adjective',
+        ipa: '/juːˈbɪk.wɪ.təs/',
+        meaning: 'Present, appearing, or found everywhere at the same time.',
+        memoryHook: 'Think "you-be-quick-with-us" because smartphones and coffee shops are literally everywhere you turn.',
+        rootsNuance: 'From Latin ubique ("everywhere"). Slightly formal or analytical tone, frequently used in tech, culture, and business writing.',
+        contextSentences: [
+          'QR code menus have become ubiquitous in restaurants around the world.',
+          'By the late 1990s, personal computers were rapidly becoming ubiquitous in modern offices.'
+        ],
+        collocations: ['become ubiquitous', 'ubiquitous presence', 'nearly ubiquitous'],
+        similar: 'omnipresent (often carries a grander or literary connotation)',
+        opposite: 'rare / scarce'
+      },
+      pragmatic: {
+        word: 'pragmatic',
+        partOfSpeech: 'adjective',
+        ipa: '/præɡˈmæt.ɪk/',
+        meaning: 'Dealing with things sensibly and realistically in a way that is based on practical results rather than theory.',
+        memoryHook: 'Imagine a "practical magnet" that pulls only real, workable solutions onto your desk and repels impractical daydreams.',
+        rootsNuance: 'From Greek pragma ("deed, act"). Positive, grounded register—widely admired in leadership and problem-solving.',
+        contextSentences: [
+          'Instead of waiting for a perfect overhaul, she took a pragmatic approach and fixed the biggest bottleneck first.',
+          'Budget constraints forced the team to make pragmatic compromises on the design.'
+        ],
+        collocations: ['pragmatic approach', 'pragmatic solution', 'pragmatic decision'],
+        similar: 'practical (everyday usefulness; pragmatic implies strategic realism)',
+        opposite: 'idealistic / dogmatic'
+      }
+    };
+
+    function buildLocalFallbackCard(rawQuery) {
+      const normalized = rawQuery.trim().toLowerCase();
+      if (BUILTIN_LEXICON[normalized]) {
+        return { ...BUILTIN_LEXICON[normalized] };
+      }
+
+      const isPhrase = rawQuery.trim().includes(' ');
+      const cleanWord = rawQuery.trim();
+      const firstLetter = cleanWord.charAt(0).toUpperCase();
+
+      return {
+        word: cleanWord,
+        partOfSpeech: isPhrase ? 'idiom / phrase' : 'vocabulary entry',
+        ipa: '/ˈkʌs.təm/',
+        meaning: `A distinct expression or concept ("${cleanWord}") saved to your personal lexicon. Edit or enrich its nuance with your own context below!`,
+        memoryHook: `Anchor "${cleanWord}" by picturing a giant glowing neon sign shaped like the letter "${firstLetter}" acting out the exact situation where you would say "${cleanWord}" out loud.`,
+        rootsNuance: isPhrase
+          ? 'Multi-word expression or idiomatic phrase. Pay close attention to the exact word order and tone when using it in conversation.'
+          : 'Single-word entry. Notice its syllable stress when listening to the pronunciation button above.',
+        contextSentences: [
+          `In a natural conversation, someone might smoothly use "${cleanWord}" to make their point sharper and more memorable.`,
+          `Hearing "${cleanWord}" in real-world articles or podcasts helps cement both its tone and proper collocations.`
+        ],
+        collocations: [`use "${cleanWord}" naturally`, `master "${cleanWord}"`],
+        similar: 'context-dependent expression',
+        opposite: 'literal or plain phrasing'
+      };
+    }
+
+    async function callGeminiJSON(promptText, systemInstructionText, responseSchema) {
+      const activeKey = getEffectiveApiKey();
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        systemInstruction: {
+          parts: [{ text: systemInstructionText }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema
+        }
+      };
+
+      const delays = [800, 1600];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            if (response.status === 429 || response.status >= 500) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            const errBody = await response.text();
+            throw new Error(`API Error ${response.status}: ${errBody}`);
+          }
+
+          const data = await response.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) {
+            throw new Error('Empty response from Gemini API');
+          }
+          return JSON.parse(rawText);
+        } catch (err) {
+          if (attempt === delays.length) {
+            throw err;
+          }
+          await new Promise(res => setTimeout(res, delays[attempt]));
+        }
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 4. UI Helpers (Toast, Modal, Speech, Escaping)
+    // ---------------------------------------------------------
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'bg-slate-900 text-white border-slate-700',
+        success: 'bg-emerald-700 text-white border-emerald-600',
+        warning: 'bg-amber-600 text-white border-amber-500',
+        error: 'bg-rose-600 text-white border-rose-500'
+      };
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-2.5 animate-fade-up ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(6px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+
+    function openConfirmModal(title, message, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const cancelBtn = document.getElementById('confirm-cancel-btn');
+      const okBtn = document.getElementById('confirm-ok-btn');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        cancelBtn.onclick = null;
+        okBtn.onclick = null;
+      };
+
+      cancelBtn.onclick = cleanup;
+      okBtn.onclick = () => {
+        cleanup();
+        onConfirm();
+      };
+    }
+
+    function speakWord(text) {
+      if (!('speechSynthesis' in window)) {
+        showToast('Audio pronunciation is not supported in this browser.', 'warning');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.92;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function getMasteryBadgeHTML(level) {
+      if (level === 3) {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Level 3 · Mastered
+        </span>`;
+      }
+      if (level === 2) {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Level 2 · Reviewing
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Level 1 · New
+      </span>`;
+    }
+
+    // ---------------------------------------------------------
+    // 5. Navigation Switching
+    // ---------------------------------------------------------
+    function switchMode(mode) {
+      state.activeMode = mode;
+
+      // Update Tab Styles
+      const tabs = ['flashcards', 'quiz', 'vault'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const view = document.getElementById(`view-${t}`);
+        if (t === mode) {
+          btn.className = 'flex-1 md:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap bg-white text-indigo-700 shadow-xs';
+          view.classList.remove('hidden');
+        } else {
+          btn.className = 'flex-1 md:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap';
+          view.classList.add('hidden');
+        }
+      });
+
+      if (mode === 'flashcards') {
+        renderFlashcardView();
+      } else if (mode === 'quiz') {
+        if (!state.quiz.questionData) {
+          startNewQuizQuestion();
+        }
+      } else if (mode === 'vault') {
+        renderVaultDashboard();
+      }
+
+      lucide.createIcons();
+    }
+
+    // ---------------------------------------------------------
+    // 6. Mode 1: Flashcard Creation & Study
+    // ---------------------------------------------------------
+    function quickFillSample(word) {
+      const input = document.getElementById('word-input');
+      input.value = word;
+      input.focus();
+      handleGenerateWord(new Event('submit'));
+    }
+
+    async function handleGenerateWord(event) {
+      event.preventDefault();
+      const inputEl = document.getElementById('word-input');
+      const rawQuery = inputEl.value.trim();
+      if (!rawQuery) return;
+
+      // Check if word already exists in deck
+      const existingIndex = state.deck.findIndex(
+        item => item.word.toLowerCase() === rawQuery.toLowerCase()
+      );
+      if (existingIndex !== -1) {
+        state.currentCardIndex = existingIndex;
+        state.isFlipped = false;
+        inputEl.value = '';
+        renderFlashcardView();
+        showToast(`"${state.deck[existingIndex].word}" is already in your vault! Loaded card.`, 'info');
+        return;
+      }
+
+      const btn = document.getElementById('generate-btn');
+      const loadingEl = document.getElementById('flashcard-loading');
+      const displayEl = document.getElementById('flashcard-display-area');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-70', 'cursor-not-allowed');
+      loadingEl.classList.remove('hidden');
+      displayEl.classList.add('hidden');
+
+      const systemPrompt = `You are an expert Vocabulary Coach and Memory Architect. Generate a high-retention flashcard using Dual Coding (vivid mental imagery), Elaborative Encoding (etymology/mnemonics), and Contextual Learning. Keep definitions crystal clear in plain English without circular dictionary jargon. Prioritize modern, natural usage.`;
+
+      const userPrompt = `Create a comprehensive memory flashcard for the English word, idiom, or phrase: "${rawQuery}".`;
+
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          word: { type: "STRING", description: "Properly cased target word, idiom, or phrase" },
+          partOfSpeech: { type: "STRING", description: "e.g., noun, verb, adjective, idiom, phrasal verb" },
+          ipa: { type: "STRING", description: "Standard IPA phonetic transcription enclosed in slashes, e.g., /ɪˈfɛm.ər.əl/" },
+          meaning: { type: "STRING", description: "Clear, plain-English core meaning" },
+          memoryHook: { type: "STRING", description: "Vivid, slightly absurd visual image or sound-alike mnemonic linking the sound/root to the meaning" },
+          rootsNuance: { type: "STRING", description: "Brief etymology/root breakdown and tone/register nuance note" },
+          contextSentences: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+            description: "Two natural, everyday sentences in distinct contexts/tones"
+          },
+          collocations: {
+            type: "ARRAY",
+            items: { type: "STRING" },
+            description: "2 to 3 natural power collocations"
+          },
+          similar: { type: "STRING", description: "One close synonym + brief note on subtle difference" },
+          opposite: { type: "STRING", description: "Clear antonym or opposite phrase" }
+        },
+        required: [
+          "word", "partOfSpeech", "ipa", "meaning", "memoryHook",
+          "rootsNuance", "contextSentences", "collocations", "similar", "opposite"
+        ]
+      };
+
+      try {
+        let cardData;
+        let usedFallback = false;
+        try {
+          cardData = await callGeminiJSON(userPrompt, systemPrompt, schema);
+        } catch (apiErr) {
+          console.warn('Using local memory architect fallback:', apiErr);
+          cardData = buildLocalFallbackCard(rawQuery);
+          usedFallback = true;
+        }
+
+        const newEntry = {
+          id: 'word-' + Date.now(),
+          word: cardData.word || rawQuery,
+          partOfSpeech: cardData.partOfSpeech || 'expression',
+          ipa: cardData.ipa || '',
+          meaning: cardData.meaning,
+          memoryHook: cardData.memoryHook,
+          rootsNuance: cardData.rootsNuance,
+          contextSentences: Array.isArray(cardData.contextSentences) ? cardData.contextSentences.slice(0, 2) : [],
+          collocations: Array.isArray(cardData.collocations) ? cardData.collocations : [],
+          similar: cardData.similar || '',
+          opposite: cardData.opposite || '',
+          masteryLevel: 1,
+          missedCount: 0,
+          userSentence: '',
+          userSentenceFeedback: ''
+        };
+
+        state.deck.unshift(newEntry);
+        state.currentCardIndex = 0;
+        state.isFlipped = false;
+        saveDeck();
+        inputEl.value = '';
+        showToast(
+          usedFallback
+            ? `Added "${newEntry.word}" using Smart Offline Architect!`
+            : `Added "${newEntry.word}" to your Memory Vault!`,
+          'success'
+        );
+      } catch (err) {
+        console.error(err);
+        showToast('Could not add phrase. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        loadingEl.classList.add('hidden');
+        displayEl.classList.remove('hidden');
+        renderFlashcardView();
+      }
+    }
+
+    function setCardPresentation(mode) {
+      state.cardPresentation = mode;
+      state.isFlipped = false;
+
+      const sheetBtn = document.getElementById('btn-view-sheet');
+      const flipBtn = document.getElementById('btn-view-flip');
+      if (mode === 'sheet') {
+        sheetBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-800 shadow-2xs transition';
+        flipBtn.className = 'px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition';
+      } else {
+        flipBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-800 shadow-2xs transition';
+        sheetBtn.className = 'px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition';
+      }
+      renderFlashcardView();
+    }
+
+    function toggleCardFlip() {
+      state.isFlipped = !state.isFlipped;
+      const inner = document.getElementById('flip-card-inner');
+      if (inner) {
+        if (state.isFlipped) {
+          inner.classList.add('rotate-y-180');
+        } else {
+          inner.classList.remove('rotate-y-180');
+        }
+      }
+    }
+
+    function selectCardByIndex(idx) {
+      if (idx >= 0 && idx < state.deck.length) {
+        state.currentCardIndex = idx;
+        state.isFlipped = false;
+        renderFlashcardView();
+      }
+    }
+
+    function navigateCard(delta) {
+      if (state.deck.length === 0) return;
+      state.currentCardIndex = (state.currentCardIndex + delta + state.deck.length) % state.deck.length;
+      state.isFlipped = false;
+      renderFlashcardView();
+    }
+
+    function renderFlashcardView() {
+      const pillsContainer = document.getElementById('deck-pills-container');
+      const indicator = document.getElementById('card-position-indicator');
+      const displayArea = document.getElementById('flashcard-display-area');
+
+      if (state.deck.length === 0) {
+        pillsContainer.innerHTML = '';
+        indicator.textContent = '0 / 0';
+        displayArea.innerHTML = `
+          <div class="bg-white rounded-2xl p-10 text-center border border-slate-200/80 shadow-card">
+            <p class="text-slate-500">Your deck is empty. Type a word above to create your first memory flashcard!</p>
+          </div>`;
+        return;
+      }
+
+      if (state.currentCardIndex >= state.deck.length) {
+        state.currentCardIndex = 0;
+      }
+
+      // Render Deck Quick Pills
+      pillsContainer.innerHTML = state.deck.map((item, idx) => {
+        const active = idx === state.currentCardIndex;
+        return `
+          <button onclick="selectCardByIndex(${idx})"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 border ${
+              active
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-700'
+            }">
+            ${escapeHTML(item.word)}
+          </button>`;
+      }).join('');
+
+      indicator.textContent = `${state.currentCardIndex + 1} / ${state.deck.length}`;
+      const card = state.deck[state.currentCardIndex];
+
+      // Build Micro-Activation HTML (shared across views)
+      const microActivationHTML = `
+        <div class="mt-6 pt-6 border-t border-slate-200/80">
+          <div class="flex items-center justify-between mb-2">
+            <label for="micro-sentence-input" class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+              <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+              <span>Micro-Activation · Lock It Into Memory</span>
+            </label>
+            <span class="text-xs text-slate-400">Write 1 original sentence using <strong>"${escapeHTML(card.word)}"</strong></span>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <input
+              type="text"
+              id="micro-sentence-input"
+              value="${escapeHTML(card.userSentence || '')}"
+              placeholder="Write your own sentence using '${escapeHTML(card.word)}'..."
+              class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white transition"
+            />
+            <button
+              type="button"
+              id="evaluate-sentence-btn"
+              onclick="evaluateUserSentence()"
+              class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 shrink-0">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span>Check My Sentence</span>
+            </button>
+          </div>
+          <div id="micro-feedback-box" class="${card.userSentenceFeedback ? 'mt-3' : 'hidden'} p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-sm text-slate-700 leading-relaxed">
+            ${card.userSentenceFeedback ? `<div class="font-semibold text-indigo-900 text-xs uppercase tracking-wider mb-1">Coach Feedback</div>${escapeHTML(card.userSentenceFeedback)}` : ''}
+          </div>
+        </div>
+      `;
+
+      if (state.cardPresentation === 'flip') {
+        // 3D Flip Card Presentation
+        displayArea.innerHTML = `
+          <div class="space-y-4">
+            <div class="perspective-1000 w-full">
+              <div id="flip-card-inner" class="relative w-full transform-style-3d cursor-pointer ${state.isFlipped ? 'rotate-y-180' : ''}" onclick="toggleCardFlip()">
+                
+                <!-- FRONT OF CARD -->
+                <div class="backface-hidden bg-white rounded-3xl p-8 sm:p-12 shadow-card border border-slate-200/80 min-h-[340px] flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    ${getMasteryBadgeHTML(card.masteryLevel)}
+                    <span class="text-xs font-medium text-slate-400 flex items-center gap-1">
+                      <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Click card to reveal meaning &amp; mnemonic
+                    </span>
+                  </div>
+
+                  <div class="my-auto py-8 text-center space-y-3">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold italic bg-slate-100 text-slate-600">
+                      ${escapeHTML(card.partOfSpeech)}
+                    </span>
+                    <h2 class="font-serif text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight">
+                      ${escapeHTML(card.word)}
+                    </h2>
+                    <div class="flex items-center justify-center gap-2.5 pt-1">
+                      <span class="text-sm font-mono text-slate-500">${escapeHTML(card.ipa)}</span>
+                      <button type="button" onclick="event.stopPropagation(); speakWord('${escapeHTML(card.word).replace(/'/g, "\\'")}')"
+                        class="p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition" title="Listen to pronunciation">
+                        <i data-lucide="volume-2" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="text-center text-xs text-slate-400">
+                    Try recalling the definition and your visual hook before flipping!
+                  </div>
+                </div>
+
+                <!-- BACK OF CARD -->
+                <div class="backface-hidden rotate-y-180 absolute inset-0 bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-indigo-200 overflow-y-auto">
+                  <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div>
+                      <span class="font-serif text-xl font-bold text-slate-900">${escapeHTML(card.word)}</span>
+                      <span class="text-xs text-slate-500 italic ml-2">(${escapeHTML(card.partOfSpeech)})</span>
+                    </div>
+                    <span class="text-xs font-semibold text-indigo-600">Click to flip back</span>
+                  </div>
+
+                  <div class="space-y-4 text-sm">
+                    <div>
+                      <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Core Meaning</div>
+                      <p class="text-slate-800 font-medium text-base mt-0.5">${escapeHTML(card.meaning)}</p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-amber-50/90 border border-amber-200/80">
+                      <div class="text-xs font-bold uppercase tracking-wider text-amber-800">🧠 Memory Hook</div>
+                      <p class="text-amber-950 mt-1 leading-relaxed">${escapeHTML(card.memoryHook)}</p>
+                    </div>
+
+                    <div>
+                      <div class="text-xs font-bold uppercase tracking-wider text-slate-400">💬 In the Wild</div>
+                      <ul class="mt-1 space-y-1 text-slate-700 italic">
+                        ${card.contextSentences.map(s => `<li>• "${escapeHTML(s)}"</li>`).join('')}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Micro-Activation Box below 3D Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-card border border-slate-200/80">
+              ${microActivationHTML}
+            </div>
+          </div>
+        `;
+      } else {
+        // Full Study Sheet Presentation (Default)
+        displayArea.innerHTML = `
+          <article class="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-slate-200/80 animate-fade-up">
+            <!-- Top Row: Word Header + Audio + Mastery Status -->
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100">
+              <div>
+                <div class="flex flex-wrap items-center gap-2.5 mb-2">
+                  <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold italic bg-slate-100 text-slate-700">
+                    ${escapeHTML(card.partOfSpeech)}
+                  </span>
+                  <span class="text-sm font-mono text-slate-500">${escapeHTML(card.ipa)}</span>
+                  <button type="button" onclick="speakWord('${escapeHTML(card.word).replace(/'/g, "\\'")}')"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition cursor-pointer"
+                    title="Pronounce word">
+                    <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                    <span>Listen</span>
+                  </button>
+                </div>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                  ${escapeHTML(card.word)}
+                </h2>
+              </div>
+
+              <div class="flex items-center gap-2 self-start">
+                ${getMasteryBadgeHTML(card.masteryLevel)}
+              </div>
+            </div>
+
+            <!-- Core Meaning -->
+            <div class="py-5 border-b border-slate-100">
+              <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Core Meaning</div>
+              <p class="text-lg sm:text-xl font-medium text-slate-800 leading-snug">
+                ${escapeHTML(card.meaning)}
+              </p>
+            </div>
+
+            <!-- Dual Coding Memory Hook (Highlighted Amber Callout) -->
+            <div class="my-5 p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/80">
+              <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 mb-1.5">
+                <span>🧠 Memory Hook (Mnemonic)</span>
+              </div>
+              <p class="text-sm sm:text-base text-amber-950 leading-relaxed">
+                ${escapeHTML(card.memoryHook)}
+              </p>
+            </div>
+
+            <!-- 2-Column Grid: Word Roots & Power Collocations -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 py-3">
+              <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  🔍 Word Roots &amp; Nuance
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                  ${escapeHTML(card.rootsNuance)}
+                </p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex flex-col justify-between">
+                <div>
+                  <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    🔗 Power Collocations
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    ${card.collocations.map(col => `
+                      <span class="px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
+                        ${escapeHTML(col)}
+                      </span>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-200/70 text-xs text-slate-600 space-y-1">
+                  <div><strong class="text-slate-800">🔄 Similar:</strong> ${escapeHTML(card.similar)}</div>
+                  <div><strong class="text-slate-800">↔️ Opposite:</strong> ${escapeHTML(card.opposite)}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- In the Wild (Context Sentences) -->
+            <div class="mt-5 pt-5 border-t border-slate-100">
+              <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                💬 In the Wild (Context)
+              </div>
+              <div class="space-y-2.5">
+                ${card.contextSentences.map((sentence, i) => `
+                  <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                    <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span>
+                    <p class="text-sm sm:text-base text-slate-700 italic leading-relaxed">"${escapeHTML(sentence)}"</p>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Micro-Activation Input & AI Feedback -->
+            ${microActivationHTML}
+          </article>
+        `;
+      }
+
+      lucide.createIcons();
+    }
+
+    async function evaluateUserSentence() {
+      const card = state.deck[state.currentCardIndex];
+      if (!card) return;
+
+      const inputEl = document.getElementById('micro-sentence-input');
+      const sentence = inputEl.value.trim();
+      if (!sentence) {
+        showToast('Write a sentence first so the coach can evaluate it!', 'warning');
+        inputEl.focus();
+        return;
+      }
+
+      const btn = document.getElementById('evaluate-sentence-btn');
+      const feedbackBox = document.getElementById('micro-feedback-box');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Evaluating...</span>`;
+      lucide.createIcons();
+
+      const systemPrompt = `You are a sharp, encouraging Vocabulary Coach. Evaluate the learner's original sentence for correct meaning, natural collocation, and register/tone. Keep feedback concise (2-3 sentences max): praise what works well, and if needed, suggest a smoother natural tweak.`;
+      const userPrompt = `Target word/phrase: "${card.word}" (${card.partOfSpeech} - ${card.meaning}).
+Learner's sentence: "${sentence}"`;
+
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          isNatural: { type: "BOOLEAN" },
+          feedback: { type: "STRING", description: "Encouraging, sharp 2-3 sentence evaluation of naturalness and nuance." }
+        },
+        required: ["isNatural", "feedback"]
+      };
+
+      try {
+        const result = await callGeminiJSON(userPrompt, systemPrompt, schema);
+        card.userSentence = sentence;
+        card.userSentenceFeedback = result.feedback;
+        saveDeck();
+
+        feedbackBox.classList.remove('hidden');
+        feedbackBox.classList.add('mt-3');
+        feedbackBox.innerHTML = `
+          <div class="flex items-center gap-1.5 font-semibold text-indigo-900 text-xs uppercase tracking-wider mb-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span>Coach Feedback</span>
+          </div>
+          <p>${escapeHTML(result.feedback)}</p>
+        `;
+        showToast('Sentence evaluated and saved to your card!', 'success');
+      } catch (err) {
+        console.warn('Using local sentence check fallback:', err);
+        const containsTarget = sentence.toLowerCase().includes(card.word.toLowerCase());
+        const localFeedback = containsTarget
+          ? `Nice work! You included "${card.word}" in context. Read it aloud once to make sure the tone and surrounding collocations feel effortless.`
+          : `Good start—try rewriting the sentence so that "${card.word}" (or a natural form of it) appears directly in the phrasing.`;
+        card.userSentence = sentence;
+        card.userSentenceFeedback = localFeedback;
+        saveDeck();
+
+        feedbackBox.classList.remove('hidden');
+        feedbackBox.classList.add('mt-3');
+        feedbackBox.innerHTML = `
+          <div class="flex items-center gap-1.5 font-semibold text-indigo-900 text-xs uppercase tracking-wider mb-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span>Coach Feedback</span>
+          </div>
+          <p>${escapeHTML(localFeedback)}</p>
+        `;
+        showToast('Sentence saved to your card!', 'success');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Check My Sentence</span>`;
+        lucide.createIcons();
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 7. Mode 2: Active Recall Quiz Engine
+    // ---------------------------------------------------------
+    function selectNextQuizWord() {
+      if (state.deck.length === 0) return null;
+
+      // Sort by lowest mastery level first, then highest missedCount
+      const candidates = [...state.deck].sort((a, b) => {
+        if (a.masteryLevel !== b.masteryLevel) return a.masteryLevel - b.masteryLevel;
+        return (b.missedCount || 0) - (a.missedCount || 0);
+      });
+
+      // Avoid repeating the exact same word back-to-back if multiple exist
+      if (candidates.length > 1 && candidates[0].id === state.quiz.lastWordId) {
+        const topLevel = candidates[0].masteryLevel;
+        const sameTier = candidates.filter(c => c.masteryLevel === topLevel && c.id !== state.quiz.lastWordId);
+        if (sameTier.length > 0) {
+          return sameTier[Math.floor(Math.random() * sameTier.length)];
+        }
+        return candidates[1];
+      }
+
+      // Pick randomly among words tied at the lowest mastery level
+      const lowestLevel = candidates[0].masteryLevel;
+      const lowestPool = candidates.filter(c => c.masteryLevel === lowestLevel);
+      return lowestPool[Math.floor(Math.random() * lowestPool.length)];
+    }
+
+    async function startNewQuizQuestion() {
+      const stage = document.getElementById('quiz-stage');
+
+      if (state.deck.length === 0) {
+        stage.innerHTML = `
+          <div class="text-center py-8 space-y-3">
+            <p class="text-slate-600">You don't have any saved words yet. Add words in <strong>Create &amp; Study</strong> first!</p>
+            <button onclick="switchMode('flashcards')" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold">Go to Flashcards</button>
+          </div>`;
+        return;
+      }
+
+      const targetWord = selectNextQuizWord();
+      const types = ['A', 'B', 'C', 'D'];
+      // Rotate question types cleanly
+      const availableTypes = types.filter(t => t !== state.quiz.questionType);
+      const chosenType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+      state.quiz.currentWordId = targetWord.id;
+      state.quiz.lastWordId = targetWord.id;
+      state.quiz.questionType = chosenType;
+      state.quiz.attempt = 1;
+      state.quiz.completed = false;
+      state.quiz.hintShown = false;
+      state.quiz.questionData = null;
+
+      stage.innerHTML = `
+        <div class="py-12 text-center space-y-3">
+          <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto animate-pulse">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-xl font-bold text-slate-900">Crafting Active Recall Challenge...</h3>
+          <p class="text-xs text-slate-500">Generating a fresh contextual prompt to test deep retrieval.</p>
+        </div>`;
+      lucide.createIcons();
+
+      const typeDescriptions = {
+        A: `Type A (Cloze / Fill-in-the-Blank): Write a rich, natural sentence where the target word/phrase "${targetWord.word}" fits perfectly, but replace the target word/phrase with "________". Do NOT include the target word in the prompt.`,
+        B: `Type B (Reverse Definition / Production): Describe a vivid real-world scenario or crisp definition that strongly calls for "${targetWord.word}", and ask the user to produce the exact word or phrase. Do NOT mention "${targetWord.word}" in the prompt.`,
+        C: `Type C (Nuance & Error Correction): Write a sentence that uses "${targetWord.word}" slightly incorrectly (e.g., wrong collocation, awkward register, or subtle meaning error) and ask the user to rewrite/fix the sentence so "${targetWord.word}" is used naturally.`,
+        D: `Type D (Scenario Prompt): Give the user a relatable real-life situation and ask them to write a 1-2 sentence response naturally incorporating "${targetWord.word}".`
+      };
+
+      const systemPrompt = `You are a Vocabulary Coach creating a single Active Recall quiz question. Keep the prompt crisp, engaging, and unambiguous.`;
+      const userPrompt = `Target entry: "${targetWord.word}" (${targetWord.partOfSpeech}) — Meaning: "${targetWord.meaning}".
+Task: ${typeDescriptions[chosenType]}`;
+
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          typeLabel: { type: "STRING", description: "Short badge label like 'Fill in the Blank', 'Reverse Recall', 'Nuance Repair', or 'Scenario Challenge'" },
+          instruction: { type: "STRING", description: "Clear 1-sentence instruction for the learner" },
+          promptText: { type: "STRING", description: "The sentence with blank, scenario description, flawed sentence, or situational prompt" },
+          idealAnswer: { type: "STRING", description: "The expected word or ideal corrected/sample sentence" }
+        },
+        required: ["typeLabel", "instruction", "promptText", "idealAnswer"]
+      };
+
+      try {
+        const qData = await callGeminiJSON(userPrompt, systemPrompt, schema);
+        state.quiz.questionData = qData;
+        renderQuizCard();
+      } catch (err) {
+        console.error(err);
+        // Fallback offline question if API fails
+        state.quiz.questionData = {
+          typeLabel: 'Reverse Recall',
+          instruction: 'Recall the exact word or phrase from your vault that matches this meaning:',
+          promptText: targetWord.meaning,
+          idealAnswer: targetWord.word
+        };
+        state.quiz.questionType = 'B';
+        renderQuizCard();
+      }
+    }
+
+    function revealQuizHint() {
+      state.quiz.hintShown = true;
+      renderQuizCard();
+    }
+
+    function renderQuizCard() {
+      const stage = document.getElementById('quiz-stage');
+      const wordObj = state.deck.find(w => w.id === state.quiz.currentWordId);
+      const q = state.quiz.questionData;
+
+      if (!wordObj || !q) return;
+
+      const lowDeckNotice = state.deck.length < 3
+        ? `<div class="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
+            <strong>Tip:</strong> You currently have ${state.deck.length} word(s) saved. Add at least 3 words for richer spaced repetition variety!
+          </div>`
+        : '';
+
+      const firstLetterHint = wordObj.word.charAt(0).toUpperCase();
+
+      stage.innerHTML = `
+        <div class="space-y-6 animate-fade-up">
+          ${lowDeckNotice}
+
+          <!-- Question Meta Header -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                ${escapeHTML(q.typeLabel)}
+              </span>
+              <span class="text-xs font-medium text-slate-400">
+                Attempt ${state.quiz.attempt} of 2
+              </span>
+            </div>
+            ${getMasteryBadgeHTML(wordObj.masteryLevel)}
+          </div>
+
+          <!-- Prompt Box -->
+          <div class="space-y-2.5">
+            <p class="text-sm font-semibold text-slate-500">${escapeHTML(q.instruction)}</p>
+            <div class="p-5 rounded-2xl bg-[#FAF9F6] border border-slate-200/90 text-lg sm:text-xl font-serif text-slate-900 leading-relaxed">
+              "${escapeHTML(q.promptText)}"
+            </div>
+          </div>
+
+          <!-- Hint Area (Memory Hook + First Letter) -->
+          ${state.quiz.hintShown ? `
+            <div class="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-sm text-amber-950 space-y-1 animate-fade-up">
+              <div class="font-bold text-xs uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                <span>🧠 Memory Hook Hint (Starts with "${escapeHTML(firstLetterHint)}...")</span>
+              </div>
+              <p>${escapeHTML(wordObj.memoryHook)}</p>
+            </div>
+          ` : `
+            <div>
+              <button type="button" onclick="revealQuizHint()" class="text-xs font-semibold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100/80 border border-amber-200/70 transition">
+                <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>
+                <span>Need a Hint? Reveal Memory Hook</span>
+              </button>
+            </div>
+          `}
+
+          <!-- User Answer Form -->
+          <form id="quiz-answer-form" onsubmit="submitQuizAnswer(event)" class="space-y-4">
+            <div>
+              <label for="quiz-user-answer" class="sr-only">Your Answer</label>
+              <input
+                type="text"
+                id="quiz-user-answer"
+                ${state.quiz.completed ? 'disabled' : ''}
+                placeholder="${state.quiz.questionType === 'A' || state.quiz.questionType === 'B' ? 'Type the target word or phrase...' : 'Write your corrected or scenario sentence...'}"
+                class="w-full px-4 py-3.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-500"
+                required
+              />
+            </div>
+
+            <div id="quiz-feedback-container"></div>
+
+            <div class="flex items-center justify-between gap-3 pt-2">
+              ${!state.quiz.completed ? `
+                <button type="submit" id="quiz-submit-btn"
+                  class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2">
+                  <span>Check Answer</span>
+                  <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              ` : `
+                <button type="button" onclick="startNewQuizQuestion()"
+                  class="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2">
+                  <span>Next Question</span>
+                  <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              `}
+            </div>
+          </form>
+        </div>
+      `;
+
+      lucide.createIcons();
+      if (!state.quiz.completed) {
+        const input = document.getElementById('quiz-user-answer');
+        if (input) input.focus();
+      }
+    }
+
+    async function submitQuizAnswer(event) {
+      event.preventDefault();
+      if (state.quiz.completed) return;
+
+      const wordObj = state.deck.find(w => w.id === state.quiz.currentWordId);
+      const q = state.quiz.questionData;
+      const inputEl = document.getElementById('quiz-user-answer');
+      const userAnswer = inputEl.value.trim();
+      if (!userAnswer) return;
+
+      const submitBtn = document.getElementById('quiz-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Grading...</span>`;
+      lucide.createIcons();
+
+      const systemPrompt = `You are a sharp, encouraging Vocabulary Coach grading a learner's Active Recall answer.
+Rules:
+1. For Type A (Cloze) or Type B (Reverse Definition), accept minor morphological inflections (e.g., plural, past tense) if appropriate, or exact matches.
+2. For Type C (Nuance/Error Correction) or Type D (Scenario Prompt), check that the target word "${wordObj.word}" is used accurately, grammatically, and with proper collocation/register.
+3. Keep feedback crisp, encouraging, and constructive (2 sentences max).`;
+
+      const userPrompt = `Question Type: ${q.typeLabel}
+Prompt: "${q.promptText}"
+Target Word/Phrase: "${wordObj.word}" (${wordObj.meaning})
+Ideal Reference Answer: "${q.idealAnswer}"
+Learner's Response: "${userAnswer}"`;
+
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          isCorrect: { type: "BOOLEAN" },
+          feedback: { type: "STRING", description: "Constructive feedback explaining why it works or what nuance is off, without giving away the exact answer if incorrect." }
+        },
+        required: ["isCorrect", "feedback"]
+      };
+
+      let evalResult = { isCorrect: false, feedback: '' };
+      try {
+        evalResult = await callGeminiJSON(userPrompt, systemPrompt, schema);
+      } catch (err) {
+        // Fallback local string check
+        const cleanUser = userAnswer.toLowerCase();
+        const cleanTarget = wordObj.word.toLowerCase();
+        evalResult.isCorrect = cleanUser.includes(cleanTarget);
+        evalResult.feedback = evalResult.isCorrect
+          ? `Spot on! "${wordObj.word}" fits the context naturally.`
+          : `Not quite yet—think about the memory hook and check your phrasing.`;
+      }
+
+      const feedbackContainer = document.getElementById('quiz-feedback-container');
+
+      if (evalResult.isCorrect) {
+        // Bump mastery up 1 level (max 3)
+        const oldLevel = wordObj.masteryLevel;
+        wordObj.masteryLevel = Math.min(3, wordObj.masteryLevel + 1);
+        state.quiz.completed = true;
+        state.quiz.streak += 1;
+        document.getElementById('quiz-streak-display').textContent = `${state.quiz.streak} 🔥`;
+        saveDeck();
+
+        renderQuizCard();
+        const updatedFeedbackEl = document.getElementById('quiz-feedback-container');
+        updatedFeedbackEl.innerHTML = `
+          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1.5 animate-fade-up">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                <span>Correct! ${oldLevel < 3 ? `Mastery bumped to Level ${wordObj.masteryLevel}` : 'Mastery Reinforced!'}</span>
+              </span>
+            </div>
+            <p class="text-sm leading-relaxed">${escapeHTML(evalResult.feedback)}</p>
+          </div>`;
+        lucide.createIcons();
+      } else {
+        // Incorrect or partial
+        if (state.quiz.attempt === 1) {
+          // Give Memory Hook hint and let them try once more!
+          state.quiz.attempt = 2;
+          state.quiz.hintShown = true;
+          wordObj.missedCount = (wordObj.missedCount || 0) + 1;
+          saveDeck();
+
+          renderQuizCard();
+          const retryInput = document.getElementById('quiz-user-answer');
+          if (retryInput) retryInput.value = userAnswer;
+          const updatedFeedbackEl = document.getElementById('quiz-feedback-container');
+          updatedFeedbackEl.innerHTML = `
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 space-y-1 animate-fade-up">
+              <div class="font-bold text-xs uppercase tracking-wider text-amber-800">
+                Almost! Use the Memory Hook above and try once more:
+              </div>
+              <p class="text-sm">${escapeHTML(evalResult.feedback)}</p>
+            </div>`;
+          lucide.createIcons();
+        } else {
+          // Attempt 2 failed -> reveal answer & explanation cleanly
+          state.quiz.completed = true;
+          state.quiz.streak = 0;
+          document.getElementById('quiz-streak-display').textContent = `0 🔥`;
+          wordObj.missedCount = (wordObj.missedCount || 0) + 1;
+          saveDeck();
+
+          renderQuizCard();
+          const updatedFeedbackEl = document.getElementById('quiz-feedback-container');
+          updatedFeedbackEl.innerHTML = `
+            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-2 animate-fade-up">
+              <div class="font-bold text-xs uppercase tracking-wider text-rose-700">
+                Review &amp; Lock It In
+              </div>
+              <p class="text-sm">${escapeHTML(evalResult.feedback)}</p>
+              <div class="pt-2 border-t border-rose-200/70 text-sm">
+                <strong>Target Answer:</strong> <span class="font-serif font-bold text-base">${escapeHTML(q.idealAnswer)}</span>
+              </div>
+            </div>`;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 8. Mode 3: Vocabulary List & Progress Dashboard
+    // ---------------------------------------------------------
+    function setVaultFilter(filterVal) {
+      state.vaultFilter = filterVal;
+      ['all', 1, 2, 3].forEach(key => {
+        const btn = document.getElementById(`filter-${key}`);
+        if (String(key) === String(filterVal)) {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition';
+        }
+      });
+      renderVaultList();
+    }
+
+    function renderVaultDashboard() {
+      const total = state.deck.length;
+      const countNew = state.deck.filter(w => w.masteryLevel === 1).length;
+      const countReviewing = state.deck.filter(w => w.masteryLevel === 2).length;
+      const countMastered = state.deck.filter(w => w.masteryLevel === 3).length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-new').textContent = countNew;
+      document.getElementById('stat-reviewing').textContent = countReviewing;
+      document.getElementById('stat-mastered').textContent = countMastered;
+
+      const pctMastered = total > 0 ? Math.round((countMastered / total) * 100) : 0;
+      const pctReviewing = total > 0 ? Math.round((countReviewing / total) * 100) : 0;
+      const pctNew = total > 0 ? Math.max(0, 100 - pctMastered - pctReviewing) : 0;
+
+      document.getElementById('mastery-percentage-label').textContent = `${pctMastered}% Mastered`;
+      document.getElementById('bar-mastered').style.width = `${pctMastered}%`;
+      document.getElementById('bar-reviewing').style.width = `${pctReviewing}%`;
+      document.getElementById('bar-new').style.width = `${pctNew}%`;
+
+      renderVaultList();
+    }
+
+    function renderVaultList() {
+      const container = document.getElementById('vault-list-container');
+      const searchQuery = (document.getElementById('vault-search')?.value || '').trim().toLowerCase();
+
+      const filtered = state.deck.filter(item => {
+        const matchesFilter = state.vaultFilter === 'all' || item.masteryLevel === state.vaultFilter;
+        const matchesSearch = !searchQuery ||
+          item.word.toLowerCase().includes(searchQuery) ||
+          item.meaning.toLowerCase().includes(searchQuery) ||
+          item.memoryHook.toLowerCase().includes(searchQuery);
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-10 text-center text-sm text-slate-500">
+            No matching words found in this view.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <th class="py-3.5 px-4 sm:px-6">Word / Phrase</th>
+                <th class="py-3.5 px-4">Short Meaning</th>
+                <th class="py-3.5 px-4">Mastery Status</th>
+                <th class="py-3.5 px-4 hidden lg:table-cell">Memory Hook</th>
+                <th class="py-3.5 px-4 sm:px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+              ${filtered.map(item => `
+                <tr class="hover:bg-slate-50/70 transition group">
+                  <td class="py-4 px-4 sm:px-6 align-top">
+                    <div class="flex items-center gap-2">
+                      <button onclick="openWordInStudy('${item.id}')" class="font-serif font-bold text-base text-slate-900 hover:text-indigo-600 text-left transition">
+                        ${escapeHTML(item.word)}
+                      </button>
+                      <button onclick="speakWord('${escapeHTML(item.word).replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded-md transition" title="Listen">
+                        <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                    <div class="text-xs text-slate-400 italic mt-0.5">${escapeHTML(item.partOfSpeech)}</div>
+                  </td>
+                  <td class="py-4 px-4 align-top text-slate-700 max-w-xs">
+                    <p class="leading-snug">${escapeHTML(item.meaning)}</p>
+                  </td>
+                  <td class="py-4 px-4 align-top whitespace-nowrap">
+                    <select
+                      aria-label="Change mastery level for ${escapeHTML(item.word)}"
+                      onchange="updateWordMastery('${item.id}', parseInt(this.value, 10))"
+                      class="text-xs font-semibold rounded-lg px-2.5 py-1.5 border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${
+                        item.masteryLevel === 3
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : item.masteryLevel === 2
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }">
+                      <option value="1" ${item.masteryLevel === 1 ? 'selected' : ''}>Level 1 · New</option>
+                      <option value="2" ${item.masteryLevel === 2 ? 'selected' : ''}>Level 2 · Reviewing</option>
+                      <option value="3" ${item.masteryLevel === 3 ? 'selected' : ''}>Level 3 · Mastered</option>
+                    </select>
+                  </td>
+                  <td class="py-4 px-4 align-top text-xs text-slate-600 max-w-sm hidden lg:table-cell leading-relaxed">
+                    ${escapeHTML(item.memoryHook)}
+                  </td>
+                  <td class="py-4 px-4 sm:px-6 align-top text-right whitespace-nowrap">
+                    <div class="inline-flex items-center gap-1">
+                      <button onclick="openWordInStudy('${item.id}')" title="Study Flashcard" class="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                      </button>
+                      <button onclick="deleteWordEntry('${item.id}')" title="Delete Word" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>`;
+
+      lucide.createIcons();
+    }
+
+    function openWordInStudy(wordId) {
+      const idx = state.deck.findIndex(w => w.id === wordId);
+      if (idx !== -1) {
+        state.currentCardIndex = idx;
+        state.isFlipped = false;
+        switchMode('flashcards');
+      }
+    }
+
+    function updateWordMastery(wordId, newLevel) {
+      const wordObj = state.deck.find(w => w.id === wordId);
+      if (wordObj && [1, 2, 3].includes(newLevel)) {
+        wordObj.masteryLevel = newLevel;
+        saveDeck();
+        renderVaultDashboard();
+        showToast(`Updated "${wordObj.word}" to Level ${newLevel}.`, 'success');
+      }
+    }
+
+    function deleteWordEntry(wordId) {
+      const wordObj = state.deck.find(w => w.id === wordId);
+      if (!wordObj) return;
+
+      openConfirmModal(
+        `Delete "${wordObj.word}"?`,
+        'This word and its memory hook will be removed from your vault.',
+        () => {
+          state.deck = state.deck.filter(w => w.id !== wordId);
+          if (state.currentCardIndex >= state.deck.length) {
+            state.currentCardIndex = Math.max(0, state.deck.length - 1);
+          }
+          saveDeck();
+          renderVaultDashboard();
+          renderFlashcardView();
+          showToast(`Deleted "${wordObj.word}".`, 'info');
+        }
+      );
+    }
+
+    function confirmClearStarterWords() {
+      const starterIds = new Set(STARTER_DECK.map(s => s.word.toLowerCase()));
+      const hasStarters = state.deck.some(w => w.isStarter || starterIds.has(w.word.toLowerCase()));
+
+      if (!hasStarters) {
+        showToast('No starter demo words remain in your vault.', 'info');
+        return;
+      }
+
+      openConfirmModal(
+        'Clear Starter Words?',
+        'This will remove the pre-seeded demo words ("ephemeral", "mitigate", "bite the bullet") while keeping any custom words you created.',
+        () => {
+          state.deck = state.deck.filter(w => !w.isStarter && !starterIds.has(w.word.toLowerCase()));
+          state.currentCardIndex = 0;
+          saveDeck();
+          renderVaultDashboard();
+          renderFlashcardView();
+          showToast('Cleared starter demo words!', 'success');
+        }
+      );
+    }
+
+    function copyShareableLink() {
+      try {
+        const currentUrl = new URL(window.location.href);
+        if (state.deck.length > 0 && state.deck[state.currentCardIndex]) {
+          currentUrl.searchParams.set('word', state.deck[state.currentCardIndex].word);
+        }
+        const textarea = document.createElement('textarea');
+        textarea.value = currentUrl.toString();
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Shareable web app link copied to clipboard!', 'success');
+      } catch (err) {
+        showToast('Could not copy link.', 'error');
+      }
+    }
+
+    function confirmResetDeck() {
+      openConfirmModal(
+        'Reset to Starter Demo Deck?',
+        'This will replace your current vocabulary list with the 3 default starter words. This action cannot be undone.',
+        () => {
+          state.deck = JSON.parse(JSON.stringify(STARTER_DECK));
+          state.currentCardIndex = 0;
+          saveDeck();
+          renderVaultDashboard();
+          showToast('Reset to starter demo deck.', 'success');
+        }
+      );
+    }
+
+    // Export Functions (Uses document.execCommand('copy') for iframe safety)
+    function exportMarkdown() {
+      const statusLabel = lvl => (lvl === 3 ? 'Mastered' : lvl === 2 ? 'Reviewing' : 'New');
+      const header = `| Word/Phrase | Short Meaning | Mastery Status | Memory Hook |\n| :--- | :--- | :--- | :--- |\n`;
+      const rows = state.deck.map(w =>
+        `| **${w.word}** | ${w.meaning.replace(/\|/g, '\\|')} | ${statusLabel(w.masteryLevel)} | ${w.memoryHook.replace(/\|/g, '\\|')} |`
+      ).join('\n');
+
+      const md = header + rows;
+      const textarea = document.createElement('textarea');
+      textarea.value = md;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copied Markdown table to clipboard!', 'success');
+      } catch (err) {
+        showToast('Could not copy to clipboard.', 'error');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function exportCSV() {
+      const statusLabel = lvl => (lvl === 3 ? 'Mastered' : lvl === 2 ? 'Reviewing' : 'New');
+      const escapeCSV = str => `"${String(str || '').replace(/"/g, '""')}"`;
+
+      const lines = [
+        ['Word/Phrase', 'Part of Speech', 'IPA', 'Core Meaning', 'Mastery Status', 'Memory Hook', 'Word Roots'].join(',')
+      ];
+
+      state.deck.forEach(w => {
+        lines.push([
+          escapeCSV(w.word),
+          escapeCSV(w.partOfSpeech),
+          escapeCSV(w.ipa),
+          escapeCSV(w.meaning),
+          escapeCSV(statusLabel(w.masteryLevel)),
+          escapeCSV(w.memoryHook),
+          escapeCSV(w.rootsNuance)
+        ].join(','));
+      });
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vocabulary-memory-vault.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported CSV file!', 'success');
+    }
+
+    // ---------------------------------------------------------
+    // 9. Initialize Application
+    // ---------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDeck();
+      updateGlobalCounters();
+      renderFlashcardView();
+      lucide.createIcons();
+
+      // Support ?word= query parameter when opening shared links
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const sharedWord = params.get('word');
+        if (sharedWord && sharedWord.trim()) {
+          quickFillSample(sharedWord.trim());
+        }
+      } catch (e) {
+        // Ignore URL parsing issues in restricted sandboxes
+      }
+    });
+  </script>
+</body>
+</html>
